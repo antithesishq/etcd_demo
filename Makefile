@@ -12,7 +12,7 @@ antithesis-build-client-docker-image: validate-node-count
 	podman build \
 		--build-arg GO_VERSION=$(shell cat $(REPOSITORY_ROOT)/.go-version) \
 		--build-arg CFG_NODE_COUNT=$(CFG_NODE_COUNT) \
-		-f $(REPOSITORY_ROOT)/tests/antithesis/test-template/Dockerfile $(REPOSITORY_ROOT) -t etcd-client:demo
+		-f $(REPOSITORY_ROOT)/test-template/Dockerfile $(REPOSITORY_ROOT) -t etcd-client:demo
 
 .PHONY: antithesis-build-etcd-image
 antithesis-build-etcd-image:
