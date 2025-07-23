@@ -4,6 +4,7 @@ on:
   schedule:
     # midnight on a Monday
     - cron: '0 0 * * 1' 
+  workflow_dispatch:
 jobs:
   build_workload:
     runs-on: ubuntu-latest
