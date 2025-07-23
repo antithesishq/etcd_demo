@@ -14,7 +14,7 @@ on:
           - v3.5.8
           - v3.5.5
           - v3.5.0
-          - 3.7.0-alpha.0
+          - v3.6.3
 jobs:
   manual_run:
     if: github.event_name == 'workflow_dispatch'
@@ -59,7 +59,7 @@ jobs:
     if: github.event_name == 'schedule'
     strategy:
       matrix:
-        etcd_server_version: [v3.5.8, v3.5.5, v3.5.0, 3.7.0-alpha.0]
+        etcd_server_version: [v3.5.8, v3.5.5, v3.5.0, 3.6.3]
     runs-on: ubuntu-latest
     permissions:
       contents: read
