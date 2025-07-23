@@ -16,7 +16,7 @@ antithesis-build-client-docker-image: validate-node-count
 
 .PHONY: antithesis-build-etcd-image
 antithesis-build-etcd-image:
-	podman build --build-arg GO_VERSION=$(shell cat $(REPOSITORY_ROOT)/.go-version) --build-arg REF=$(REF) $(REPOSITORY_ROOT)/tests/antithesis/server/ -t etcd-server:$(REF)
+	podman build --build-arg GO_VERSION=$(shell cat $(REPOSITORY_ROOT)/.go-version) --build-arg REF=$(REF) $(REPOSITORY_ROOT)/server/ -t etcd-server:$(REF)
 
 .PHONY: antithesis-build-etcd-image-race
 antithesis-build-etcd-image-race:
@@ -33,6 +33,10 @@ antithesis-build-etcd-image-v3.6.3: antithesis-build-etcd-image
 .PHONY: antithesis-build-etcd-image-v3.6.3-race
 antithesis-build-etcd-image-v3.6.3: REF=v3.6.3-race
 antithesis-build-etcd-image-v3.6.3: antithesis-build-etcd-image
+
+.PHONY: antithesis-build-etcd-image-v3.5.5
+antithesis-build-etcd-image-v3.5.5: REF=v3.5.5
+antithesis-build-etcd-image-v3.5.5: antithesis-build-etcd-image
 
 .PHONY: antithesis-build-etcd-image-v3.5.0
 antithesis-build-etcd-image-v3.5.0: REF=v3.5.0
