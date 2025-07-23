@@ -1,0 +1,45 @@
+name: Run Antithesis test
+
+on: 
+  workflow_dispatch:
+    inputs:
+      etcd_server_version:
+        type: choice
+        required: true
+        description: The version of etcd server to build
+        options:
+          - v3.5.8
+          - v3.5.5
+          - v3.5.0
+          - v3.6.3
+      duration:
+        type: string
+        required: true
+        default: '1'
+        description: Duration to the test run
+      emails:
+        type: string
+        required: true
+        description: Email receipents
+
+jobs:
+  manual_run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: antithesishq/antithesis-trigger-action@main
+        with:
+          notebook_name: presales_demo_etcd
+          tenant: demo
+          username: sample_report
+          password: ${{ secrets.ANTITHESIS_PASSWORD }}
+          github_token: ${{ secrets.GH_PAT }}
+          images:
+          # config_image: config:${{ github.event.inputs.config }}
+          # description: "Manual Test"
+          email_recipients: ${{ github.event.inputs.emails }}
+          additional_parameters: |-
+            custom.duration=${{ github.event.inputs.duration }}
+            custom.etcd_version=${{ github.event.inputs.etcd_server_version }}
