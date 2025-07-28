@@ -33,10 +33,8 @@ Below are the issues Antithesis helped Linux Foundation (etcd) found:
 | Unique          | [github issue](https://github.com/etcd-io/etcd/issues/18667) | v3.5.0           | v3.5.15?      | [Triage report](https://public.antithesis.com/report/LcKmbhrCiBLCksKxwq7CpsK3woLCkMKWenLDu14/BsUY10JF0LHQETvugI5DimDIzO47z16c0Lm2HXqK8vg.html)                                                                                                                                                                                                                                                                                                                              |
 | Ordered         | N/A                                                          | v3.5.0           | ??            | [Triage report](https://public.antithesis.com/report/LcKmbhrCiBLCksKxwq7CpsK3woLCkMKWenLDu14/BsUY10JF0LHQETvugI5DimDIzO47z16c0Lm2HXqK8vg.html)                                                                                                                                                                                                                                                                                                                              |
 
-
--
--
--
+---
+---
 
 ## Original Read me
 
