@@ -1,3 +1,46 @@
+# Antithesis etcd demo
+
+This repository is forked from ([https://github.com/etcd-io/etcd/tree/main/tests/antithesis](https://github.com/etcd-io/etcd/tree/main/tests/antithesis)). It is meant to run previous releases of etcd version to find previously known issues (Brown M&Ms).
+
+
+## Building and running the tests
+
+* There is a github action job that builds all of the container images Monday morning to ensure container image retention. If you need to build custom versions of etcd please look into the `Makefile`
+* Tests can be run via [github action](https://github.com/antithesishq/etcd_demo/actions/workflows/run_antithesis_test.yml) 
+* (todo) Run multiverse debugging session
+* (todo) Run bug report
+
+## Known issue and new bugs found
+
+The robustness tests mostly focused on guarantees of the watch API. A event-based API component of etcd. https://etcd.io/docs/v3.6/learning/api/#watch-api
+
+We were able to break the following guarantees:
+
+* **Bookmarkable** - Progress notification events guarantee that all events up to a revision have been already delivered
+* **Reliable** - A sequence of events will never drop any subsequence of events; if there are events ordered in time as a < b < c, then if the watch receives events a and c, it is guaranteed to receive b
+* **Resumable** - A broken watch can be resumed by establishing a new watch starting after the last revision received in a watch event before the break, so long as the revision is in the history window
+* **Unique** - an event will never appear on a watch twice
+* **Ordered** - events are ordered by revision; an event will never appear on a watch if it precedes an event in time that has already been posted
+
+
+Below are the issues Antithesis helped Linux Foundation (etcd) found:
+
+| **Guarantee Violated**   | **Original Issue**                                           | Found version(s) | Fixed Version | Antithesis report                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|-----------------|--------------------------------------------------------------|------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Bookmarkable    | [github issue](https://github.com/etcd-io/etcd/issues/15220) | v3.5.0           | v3.5.8        | [Triage report](https://public.antithesis.com/report/LcKmbhrCiBLCksKxwq7CpsK3woLCkMKWenLDu14/BsUY10JF0LHQETvugI5DimDIzO47z16c0Lm2HXqK8vg.html)                                                                                                                                                                                                                                                                                                                              |
+| Reliable        | [github issue](https://github.com/etcd-io/etcd/issues/18089) | v3.5.0, v3.5.8   | v3.5.16       | [Triage report](https://public.antithesis.com/report/w7dof2fCrSpLPHHDk8KICsOeAhDDjFnCjA/AmNyFPuJjv2dM7LJ8CSMpvIBX6JTzavqA4e9B5ZGEz0.html)                                                                                                                                                                                                                                                                                                                                   |
+| Resumable (new issue) | [github issue](https://github.com/etcd-io/etcd/issues/20221) | v3.6.1           | v3.6.2        | [Triage report](https://linuxfoundation.antithesis.com/report/UZjUP_KGxboJepL7k1q_8pa4/ZqL0Vt9a7YESiiBmGecPMkBP8YgM1IwlTZJ4dcYjmZ8.html?auth=v2.public.eyJuYmYiOiIyMDI1LTA2LTI1VDAzOjE4OjIzLjM4MDU2MDQwMFoiLCJzY29wZSI6eyJSZXBvcnRTY29wZVYxIjp7ImFzc2V0IjoiWnFMMFZ0OWE3WUVTaWlCbUdlY1BNa0JQOFlnTTFJd2xUWko0ZGNZam1aOC5odG1sIiwicmVwb3J0X2lkIjoiVVpqVVBfS0d4Ym9KZXBMN2sxcV84cGE0In19feIAsYO4-UIigcL4eMu7QUqA6XFbCU3Hnw7BeyZW06o9x11mFqleHbSbRWdIcLdTH2Xzx42DXNB7dBqYq25Ujg4) |
+| Unique          | [github issue](https://github.com/etcd-io/etcd/issues/18667) | v3.5.0           | v3.5.15?      | [Triage report](https://public.antithesis.com/report/LcKmbhrCiBLCksKxwq7CpsK3woLCkMKWenLDu14/BsUY10JF0LHQETvugI5DimDIzO47z16c0Lm2HXqK8vg.html)                                                                                                                                                                                                                                                                                                                              |
+| Ordered         | N/A                                                          | v3.5.0           | ??            | [Triage report](https://public.antithesis.com/report/LcKmbhrCiBLCksKxwq7CpsK3woLCkMKWenLDu14/BsUY10JF0LHQETvugI5DimDIzO47z16c0Lm2HXqK8vg.html)                                                                                                                                                                                                                                                                                                                              |
+
+
+-
+-
+-
+
+## Original Read me
+
+
 This directory enables integration of Antithesis with etcd. There are 4 containers running in this system: 3 that make up an etcd cluster (etcd0, etcd1, etcd2) and one that "[makes the system go](https://antithesis.com/docs/getting_started/basic_test_hookup/)" (client).
 
 ## Quickstart
