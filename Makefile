@@ -10,6 +10,7 @@ CFG_NODE_COUNT ?= 3
 .PHONY: antithesis-build-client-docker-image
 antithesis-build-client-docker-image: validate-node-count
 	podman build \
+		--no-cache \
 		--build-arg GO_VERSION=$(shell cat $(REPOSITORY_ROOT)/.go-version) \
 		--build-arg CFG_NODE_COUNT=$(CFG_NODE_COUNT) \
 		-f $(REPOSITORY_ROOT)/test-template/Dockerfile $(REPOSITORY_ROOT) -t etcd-client:demo
@@ -20,7 +21,7 @@ antithesis-build-etcd-image:
 
 .PHONY: antithesis-build-etcd-image-race
 antithesis-build-etcd-image-race:
-	podman build --build-arg GO_VERSION=$(shell cat $(REPOSITORY_ROOT)/.go-version) --build-arg REF=$(REF) $(REPOSITORY_ROOT)/tests/antithesis/server/ -t etcd-server:$(REF)-race -f $(REPOSITORY_ROOT)/tests/antithesis/server/race.Dockerfile
+	podman build --build-arg GO_VERSION=$(shell cat $(REPOSITORY_ROOT)/.go-version) --build-arg REF=$(REF) $(REPOSITORY_ROOT)/server/ -t etcd-server:$(REF)-race -f $(REPOSITORY_ROOT)/server/race.Dockerfile
 
 .PHONY: antithesis-build-etcd-image-v3.6.3-race
 antithesis-build-etcd-image-v3.6.3-race: REF=v3.6.3
