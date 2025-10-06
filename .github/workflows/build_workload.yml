@@ -37,7 +37,7 @@ jobs:
       with:
         # node count can also be one 
         build-args: |
-          GO_VERSION=1.24.5
+          GO_VERSION=1.25.1
           CFG_NODE_COUNT=3
         context: .
         file: ./test-template/Dockerfile
