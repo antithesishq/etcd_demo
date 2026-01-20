@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  schedule:
+    - cron: "00 22 * * *"
+  workflow_dispatch:
+
+jobs:
+  Antithesis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Trigger Antithesis
+        uses: antithesishq/antithesis-trigger-action@main
+        with:
+          notebook_name: etcd
+          tenant: demo
+          username: ${{ secrets.ANTITHESIS_USER_NAME }}
+          password: ${{ secrets.ANTITHESIS_PASSWORD }}
+          github_token: ${{ secrets.GH_PAT }}
+          config_image: etcd:latest
+          description: "[${{ github.repository }}] CI for ${{ github.ref_name }} (commit ${{ github.sha }})"
+          email_recipients: ${{ github.event.inputs.emails || secrets.ZULIP_REPORT_EMAIL }}
+          additional_parameters: |-
+            custom.duration=${{ github.event.inputs.duration || '0.5' }}
