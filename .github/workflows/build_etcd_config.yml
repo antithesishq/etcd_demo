@@ -21,7 +21,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
-        etcd_version: ${{ (github.event_name == 'schedule' || github.event.inputs.etcd_version == 'all') && fromJSON('["v3.5.8", "v3.5.5", "v3.5.0", "v3.6.3"]') || fromJSON(format('["{0}"]', github.event.inputs.etcd_version)) }}
+        etcd_config_version: ${{ (github.event_name == 'schedule' || github.event.inputs.etcd_config_version == 'all') && fromJSON('["v3.5.8", "v3.5.5", "v3.5.0", "v3.6.3"]') || fromJSON(format('["{0}"]', github.event.inputs.etcd_config_version)) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
