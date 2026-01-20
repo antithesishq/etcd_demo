@@ -2,8 +2,18 @@ name: CI
 
 on:
   schedule:
-    - cron: "00 22 * * *"
+    - cron: '0 1 * * 1' 
   workflow_dispatch:
+    inputs:
+      etcd_version:
+        type: choice
+        required: false
+        description: The version of etcd config to build
+        options:
+          - v3.5.8
+          - v3.5.5
+          - v3.5.0
+          - v3.6.3
 
 jobs:
   Antithesis:
@@ -11,7 +21,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
-
+    strategy:
+      matrix:
+        etcd_version: ${{ (github.event_name == 'schedule' || github.event.inputs.etcd_version == '') && fromJSON('["v3.5.8", "v3.5.5", "v3.5.0", "v3.6.3"]') || fromJSON(format('["{0}"]', github.event.inputs.etcd_version)) }}
     steps:
       - name: Trigger Antithesis
         uses: antithesishq/antithesis-trigger-action@main
@@ -21,8 +33,9 @@ jobs:
           username: ${{ secrets.ANTITHESIS_USER_NAME }}
           password: ${{ secrets.ANTITHESIS_PASSWORD }}
           github_token: ${{ secrets.GH_PAT }}
-          config_image: etcd:latest
+          config_image: etcd:${{ matrix.etcd_version }}
           description: "[${{ github.repository }}] CI for ${{ github.ref_name }} (commit ${{ github.sha }})"
           email_recipients: ${{ github.event.inputs.emails || secrets.ZULIP_REPORT_EMAIL }}
           additional_parameters: |-
             custom.duration=${{ github.event.inputs.duration || '0.5' }}
+            etcd_version=${{ matrix.etcd_version }}
