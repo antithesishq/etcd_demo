@@ -46,7 +46,7 @@ jobs:
         images: us-central1-docker.pkg.dev/molten-verve-216720/demo-repository/etcd-config
         tags: |
           type=sha
-          ${{ github.event.inputs.etcd_config_version }}
+          ${{ matrix.etcd_config_version }}
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
