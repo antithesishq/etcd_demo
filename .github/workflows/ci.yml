@@ -31,7 +31,7 @@ jobs:
         with:
           notebook_name: etcd
           tenant: demo
-          username: ${{ secrets.ANTITHESIS_USER_NAME }}
+          username: ${{ secrets.ANTITHESIS_USERNAME }}
           password: ${{ secrets.ANTITHESIS_PASSWORD }}
           github_token: ${{ secrets.GH_PAT }}
           config_image: etcd:${{ matrix.etcd_version }}
