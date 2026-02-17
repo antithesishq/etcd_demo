@@ -5,6 +5,14 @@ on:
     - cron: '0 1 * * 1' 
   workflow_dispatch:
     inputs:
+      duration:
+        type: string
+        required: false # default set below b/c automated runs don't use this config
+        description: Test duration (hours, default 0.5)
+      emails:
+        type: string
+        required: false
+        description: Email recipients (default notifies Zulip)
       etcd_version:
         type: choice
         required: false
