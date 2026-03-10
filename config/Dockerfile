@@ -9,4 +9,4 @@ COPY docker-compose-${NODE_COUNT}-node.yml /docker-compose.yml.template
 RUN IMAGE_TAG=${IMAGE_TAG} cat /docker-compose.yml.template | envsubst > /docker-compose.yml
 
 FROM scratch
-COPY --from=build /docker-compose.yml /docker-compose.yml
+COPY --from=build /docker-compose.yml /docker-compose.yaml
