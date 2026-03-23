@@ -99,7 +99,7 @@ services:
       - ${ETCD_ROBUSTNESS_DATA_PATH:-/tmp/etcddata}2:/var/etcd/data
 
   client:
-    image: 'etcd-client:${IMAGE_TAG:-latest}'
+    image: 'etcd-client:demo'
     container_name: client
     entrypoint: ["/opt/antithesis/entrypoint/entrypoint"]
     user: "${USER_ID:-root}:${GROUP_ID:-root}"
