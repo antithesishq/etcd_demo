@@ -1,10 +1,22 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: report-path-claim
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: etcd-client
   namespace: "default"
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: etcd-client
@@ -29,6 +41,7 @@ spec:
       containers:
       - name: etcd-client
         image: us-central1-docker.pkg.dev/molten-verve-216720/demo-repository/etcd-client:demo
+        # image: localhost/etcd-client:latest
         imagePullPolicy: Never
         volumeMounts:
         - name: report-path
