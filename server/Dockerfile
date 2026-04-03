@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.24.5
+ARG GO_VERSION=1.26.1
 ARG ARCH=amd64
 
 FROM docker.io/golang:$GO_VERSION
@@ -39,5 +39,7 @@ RUN if [ -d "vendor" ]; then go mod vendor; fi
 RUN for d in server etcdutl etcdctl; do (cd ${d} && go mod tidy || true); done
 # The instrumentation also adds a new main file which clashes with dummy.go found in non release-3.4 branches
 RUN if [ -f "dummy.go" ]; then sed -i 's/package main_test/package main/' dummy.go; fi
+# The instrumentor may downgrade go.work version; fix it to match the current Go toolchain
+RUN go work use . server etcdutl etcdctl
 RUN CGO_ENABLED=1 make build
 CMD ["./bin/etcd"]

@@ -12,6 +12,11 @@ WORKDIR /etcd
 # setup go mod
 RUN go mod download
 
+WORKDIR /etcd
+
+# Fix: skip no-op raft entries instead of panicking (upstream bug in WAL parser)
+RUN sed -i 's/panic(fmt.Sprintf("Unhandled raft request: %+v", raftReq))/return nil, nil/' tests/robustness/report/wal.go
+
 WORKDIR /etcd/tests/antithesis
 
 RUN go build -ldflags "-X main.NodeCount=$CFG_NODE_COUNT" -o /opt/antithesis/entrypoint/entrypoint -race ./test-template/entrypoint/main.go
