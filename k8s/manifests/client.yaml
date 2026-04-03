@@ -56,7 +56,7 @@ spec:
           - name: ETCD_ROBUSTNESS_ENDPOINTS
             value: etcd-0.etcd-headless.default.svc.cluster.local:2379,etcd-1.etcd-headless.default.svc.cluster.local:2379,etcd-2.etcd-headless.default.svc.cluster.local:2379
           - name: ETCD_ROBUSTNESS_DATA_PATHS
-            value: "/var/etcddata0,/var/etcddata1,/var/etcddata2"
+            value: "/var/etcddata0/data,/var/etcddata1/data,/var/etcddata2/data"
           - name: ETCD_ROBUSTNESS_REPORT_PATH
             value: "/var/report"
         # The client containers must be kept running for Antithesis to keep testing

@@ -158,77 +158,39 @@ spec:
         app.kubernetes.io/version: 3.6.4
         helm.sh/chart: etcd-12.0.18
         app.kubernetes.io/component: etcd
-      annotations:
     spec:
       
       automountServiceAccountToken: false
-      affinity:
-        podAffinity:
-          
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/instance: etcd
-                    app.kubernetes.io/name: etcd
-                    app.kubernetes.io/component: etcd
-                topologyKey: kubernetes.io/hostname
-              weight: 1
-        nodeAffinity:
-          
       securityContext:
-        fsGroup: 1001
-        fsGroupChangePolicy: Always
-        supplementalGroups: []
-        sysctls: []
+        fsGroup: 0
       serviceAccountName: "etcd"
       containers:
         - name: etcd
-          image: docker.io/bitnamilegacy/etcd:3.5
-          imagePullPolicy: "IfNotPresent"
+          image: us-central1-docker.pkg.dev/molten-verve-216720/demo-repository/etcd-server:demo
+          imagePullPolicy: "Never"
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
               - ALL
             privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
+            readOnlyRootFilesystem: false
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
           env:
-            - name: BITNAMI_DEBUG
-              value: "false"
-            - name: MY_POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
             - name: MY_POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: MY_STS_NAME
-              value: "etcd"
-            - name: ETCD_ON_K8S
-              value: "yes"
-            - name: ETCD_START_FROM_SNAPSHOT
-              value: "no"
-            - name: ETCD_DISASTER_RECOVERY
-              value: "no"
             - name: ETCD_NAME
               value: "$(MY_POD_NAME)"
             - name: ETCD_DATA_DIR
-              value: "/bitnami/etcd/data"
+              value: "/var/etcd/data"
             - name: ETCD_LOG_LEVEL
               value: "info"
-            - name: ALLOW_NONE_AUTHENTICATION
-              value: "yes"
             - name: ETCD_ADVERTISE_CLIENT_URLS
-              value: "http://$(MY_POD_NAME).etcd-headless.default.svc.cluster.local:2379,http://etcd.default.svc.cluster.local:2379"
+              value: "http://$(MY_POD_NAME).etcd-headless.default.svc.cluster.local:2379"
             - name: ETCD_LISTEN_CLIENT_URLS
               value: "http://0.0.0.0:2379"
             - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
@@ -236,12 +198,17 @@ spec:
             - name: ETCD_LISTEN_PEER_URLS
               value: "http://0.0.0.0:2380"
             - name: ETCD_INITIAL_CLUSTER_TOKEN
-              value: "etcd-cluster-k8s"
+              value: "etcd-cluster-1"
             - name: ETCD_INITIAL_CLUSTER
               value: "etcd-0=http://etcd-0.etcd-headless.default.svc.cluster.local:2380,etcd-1=http://etcd-1.etcd-headless.default.svc.cluster.local:2380,etcd-2=http://etcd-2.etcd-headless.default.svc.cluster.local:2380"
-            - name: ETCD_CLUSTER_DOMAIN
-              value: "etcd-headless.default.svc.cluster.local"
-          envFrom:
+            - name: ETCD_INITIAL_CLUSTER_STATE
+              value: "new"
+            - name: ETCD_SNAPSHOT_CATCHUP_ENTRIES
+              value: "100"
+            - name: ETCD_SNAPSHOT_COUNT
+              value: "50"
+            - name: ETCD_COMPACTION_BATCH_LIMIT
+              value: "10"
           ports:
             - name: client
               containerPort: 2379
@@ -250,20 +217,25 @@ spec:
               containerPort: 2380
               protocol: TCP
           livenessProbe:
-            httpGet:
-              port: 2379
-              path: /livez
-              scheme: "HTTP"
-            initialDelaySeconds: 60
-            periodSeconds: 30
+            exec:
+              command:
+                - /etcd_instrumented/customer/bin/etcdctl
+                - endpoint
+                - health
+                - --endpoints=http://127.0.0.1:2379
+            initialDelaySeconds: 30
+            periodSeconds: 15
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 5
           readinessProbe:
             exec:
               command:
-                - /opt/bitnami/scripts/etcd/healthcheck.sh
-            initialDelaySeconds: 60
+                - /etcd_instrumented/customer/bin/etcdctl
+                - endpoint
+                - health
+                - --endpoints=http://127.0.0.1:2379
+            initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 5
             successThreshold: 1
@@ -278,17 +250,8 @@ spec:
               ephemeral-storage: 50Mi
               memory: 256Mi
           volumeMounts:
-            - name: empty-dir
-              mountPath: /opt/bitnami/etcd/conf/
-              subPath: app-conf-dir
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
             - name: data
-              mountPath: /bitnami/etcd
-      volumes:
-        - name: empty-dir
-          emptyDir: {}
+              mountPath: /var/etcd
   volumeClaimTemplates:
     - metadata:
         name: data
