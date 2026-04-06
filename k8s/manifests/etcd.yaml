@@ -166,7 +166,7 @@ spec:
       serviceAccountName: "etcd"
       containers:
         - name: etcd
-          image: us-central1-docker.pkg.dev/molten-verve-216720/demo-repository/etcd-server:demo
+          image: us-central1-docker.pkg.dev/molten-verve-216720/demo-repository/etcd-server:demo-k8s
           imagePullPolicy: "Never"
           securityContext:
             allowPrivilegeEscalation: false
