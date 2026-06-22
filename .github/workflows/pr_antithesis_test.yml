@@ -1,0 +1,128 @@
+name: PR Antithesis Test
+
+# Kick off an Antithesis run for a PR by commenting:
+#   /run-antithesis-test [etcd_version] [duration_hours]
+# e.g. "/run-antithesis-test"            -> v3.6.3, 0.5h
+#      "/run-antithesis-test v3.5.0 1"   -> v3.5.0, 1h
+#
+# Builds the workload (etcd-client) from the PR's HEAD, bundles it into a
+# config image, and triggers the `etcd` notebook against those PR images.
+#
+# NOTE: issue_comment workflows run from the DEFAULT branch, so this file must
+# be merged to the default branch before the command works.
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: pr-antithesis-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  antithesis:
+    # Only on PR comments, only for the command, only from trusted authors.
+    if: >-
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/run-antithesis-test') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      REGISTRY: us-central1-docker.pkg.dev/molten-verve-216720/demo-repository
+      PR_TAG: pr-${{ github.event.issue.number }}
+    steps:
+      - name: Acknowledge command (👀) and parse args
+        id: cmd
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              comment_id: context.payload.comment.id, content: 'eyes',
+            });
+            // "/run-antithesis-test [version] [duration]"
+            const parts = context.payload.comment.body.trim().split(/\s+/);
+            const version = parts[1] || 'v3.6.3';
+            const duration = parts[2] || '0.5';
+            core.setOutput('version', version);
+            core.setOutput('duration', duration);
+            // Resolve the PR head SHA (issue_comment context is the default branch).
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner, repo: context.repo.repo,
+              pull_number: context.payload.issue.number,
+            });
+            core.setOutput('sha', pr.head.sha);
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.cmd.outputs.sha }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to Antithesis Google Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.ANTITHESIS_GAR_KEY }}
+
+      - name: Build & push workload (etcd-client) from the PR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./test-template/Dockerfile
+          push: true
+          build-args: |
+            GO_VERSION=1.26.1
+            CFG_NODE_COUNT=3
+          tags: ${{ env.REGISTRY }}/etcd-client:${{ env.PR_TAG }}
+
+      - name: Build & push config (references the PR workload)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./config/
+          file: ./config/Dockerfile
+          push: true
+          build-args: |
+            GO_VERSION=1.24.5
+            IMAGE_TAG=${{ steps.cmd.outputs.version }}
+            CLIENT_TAG=${{ env.PR_TAG }}
+            NODE_COUNT=3
+          tags: ${{ env.REGISTRY }}/etcd-config:${{ env.PR_TAG }}
+
+      - name: Trigger Antithesis
+        uses: antithesishq/antithesis-trigger-action@main
+        with:
+          notebook_name: etcd
+          tenant: demo
+          username: ${{ secrets.ANTITHESIS_USERNAME }}
+          password: ${{ secrets.ANTITHESIS_PASSWORD }}
+          github_token: ${{ secrets.GH_PAT }}
+          config_image: ${{ env.REGISTRY }}/etcd-config:${{ env.PR_TAG }}
+          description: "[${{ github.repository }}] PR #${{ github.event.issue.number }} (commit ${{ steps.cmd.outputs.sha }})"
+          email_recipients: ${{ secrets.ZULIP_REPORT_EMAIL }}
+          additional_parameters: |-
+            custom.duration=${{ steps.cmd.outputs.duration }}
+            custom.etcd_version=${{ steps.cmd.outputs.version }}
+
+      - name: Report result on the PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ok = '${{ job.status }}' === 'success';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = ok
+              ? `🧪 **Antithesis test kicked off** for \`${{ steps.cmd.outputs.sha }}\`\n` +
+                `- config image: \`etcd-config:${{ env.PR_TAG }}\`\n` +
+                `- etcd version: \`${{ steps.cmd.outputs.version }}\` · duration: \`${{ steps.cmd.outputs.duration }}\`h\n` +
+                `Results will be emailed to the configured recipients when the run completes.`
+              : `⚠️ **Failed to kick off the Antithesis test.** See the [workflow run](${runUrl}).`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.issue.number, body,
+            });

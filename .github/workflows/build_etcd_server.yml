@@ -15,6 +15,7 @@ on:
           - v3.5.5
           - v3.5.0
           - v3.6.3
+          - v3.6.9
 jobs:
   manual_run:
     if: github.event_name == 'workflow_dispatch'
@@ -47,7 +48,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         build-args: |
-          GO_VERSION=1.24.5
+          GO_VERSION=${{ github.event.inputs.etcd_server_version == 'v3.6.9' && '1.25.8' || '1.24.5' }}
           REF=${{ github.event.inputs.etcd_server_version }}
         context: ./server/
         file: ./server/Dockerfile
@@ -89,7 +90,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         build-args: |
-          GO_VERSION=1.24.5
+          GO_VERSION=${{ matrix.etcd_server_version == 'v3.6.9' && '1.25.8' || '1.24.5' }}
           REF=${{ matrix.etcd_server_version }}
         context: ./server/
         file: ./server/Dockerfile
